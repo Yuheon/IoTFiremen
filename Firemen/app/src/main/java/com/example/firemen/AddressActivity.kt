@@ -29,16 +29,20 @@ class AddressActivity : AppCompatActivity() {
             myFragment.setOnOKClickedListener { context->
                 //textView4.text =  context
                 addressCode = context
-
-
             }
+
+//            myFragment.setOnOKClickedListener { context->
+//                //textView4.text =  context
+//                addressCode = context
+//            }
+
             var log = "addr"
             Log.i(log, addressCode)
             //Log.i(log, editTextAddr.text.toString())
             //textView4.text = addressCode
         }
 
-        val adapter = MyAdapter()
+        val adapter = MyAdapter(this)
         //adapter.itemList = listOf(Item("add1"), Item("add2"), Item("add3"))
         adapter.recyclerItemList = mutableListOf(RecyclerItem(R.drawable.fire,"충청북도 청주시 245-7 개신동 기원빌"), RecyclerItem(R.drawable.safe,"충청북도 청주시 235-8 개신동 나눔빌"))
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
@@ -47,7 +51,7 @@ class AddressActivity : AppCompatActivity() {
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
-        adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
+        adapter.recyclerItemList.add(RecyclerItem(R.drawable.fire,"충청북도 청주시 245-7 개신동 기원빌"))
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
         adapter.recyclerItemList.add(RecyclerItem(R.drawable.safe,"충청북도 청주시 245-7 개신동 기원빌"))
@@ -59,7 +63,7 @@ class AddressActivity : AppCompatActivity() {
     }
 
 
-
+    /*
     private fun showDialog(){
         val inflater = LayoutInflater.from(this)
         val builder = AlertDialog.Builder(this)
@@ -83,5 +87,7 @@ class AddressActivity : AppCompatActivity() {
         //dialog.show()
         builder.create()
     }
+    */
+
 }
 
