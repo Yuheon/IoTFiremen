@@ -1,17 +1,20 @@
 package com.example.firemen
 
 import android.content.Intent
-import android.nfc.Tag
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.activity_register.*
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.InputStream
+import java.net.Socket
+import java.nio.charset.Charset
 
 
 class RegisterActivity : AppCompatActivity() {
@@ -67,38 +70,99 @@ class RegisterActivity : AppCompatActivity() {
         if(flag == 1)
             return
         else {
-            auth.createUserWithEmailAndPassword(
-                editTextEmail.text.toString(),
-                editTextPassword.text.toString()
-            )
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        //Creating a user account
-                        Log.d(log, "createUserWithEmail:success")
+            Log.i("serverlog2", "333333")
+            var thread = NetworkThread()
+            thread.start()
+            //fire base 사용했을 때
+//            auth.createUserWithEmailAndPassword(
+//                editTextEmail.text.toString(),
+//                editTextPassword.text.toString()
+//            )
+//                .addOnCompleteListener { task ->
+//                    if (task.isSuccessful) {
+//                        //Creating a user account
+//                        Log.d(log, "createUserWithEmail:success")
+//
+//                        val userID = auth.currentUser!!.uid
+//                        //val user = UserData(userEmail, userName, userPNumber)
+//
+//                        var addressCode:MutableList<String> = mutableListOf()
+//                        var status:MutableList<Int> = mutableListOf()
+//                        var address:MutableList<String> = mutableListOf()
+//
+//                        val a = data(userEmail, userName, userPNumber, addressCode, status, address)
+//                        database = FirebaseDatabase.getInstance().reference
+//                        database.child("users").child(userID).setValue(a)
+//
+//
+//                        moveLoginPage()
+//                    } else {
+//                        //Show the error message
+//                        Log.w(log, "createUserWithEmail:failure", task.exception)
+//                        Toast.makeText(this, task.exception?.message, Toast.LENGTH_LONG).show()
+//                    }
+//                }
 
-                        val userID = auth.currentUser!!.uid
-                        //val user = UserData(userEmail, userName, userPNumber)
-
-                        var addressCode:MutableList<String> = mutableListOf()
-                        var status:MutableList<Int> = mutableListOf()
-                        var address:MutableList<String> = mutableListOf()
-
-                        val a = data(userEmail, userName, userPNumber, addressCode, status, address)
-                        database = FirebaseDatabase.getInstance().reference
-                        database.child("users").child(userID).setValue(a)
-
-
-                        moveLoginPage()
-                    } else {
-                        //Show the error message
-                        Log.w(log, "createUserWithEmail:failure", task.exception)
-                        Toast.makeText(this, task.exception?.message, Toast.LENGTH_LONG).show()
-                    }
-                }
         }
 
     }
     fun moveLoginPage(){
         startActivity(Intent(this, LoginActivity::class.java))
+    }
+    inner class NetworkThread : Thread(){
+        //private val ip = "192.168.1.6"
+        private val ip = "54.221.152.48"
+        private val port = 4000
+
+
+        override fun run() {
+            try{
+                var socket = Socket(ip, port)
+
+                var input = socket.getInputStream()
+                var dis = DataInputStream(input)
+
+                var output = socket.getOutputStream()
+                var dos = DataOutputStream(output)
+
+                var userData = "APP/JOIN/${editTextEmail.text.toString()}/${editTextPassword.text.toString()}/${editTextPNumber.text.toString()}/${editTextName.text.toString()}"
+
+
+                dos.writeUTF(userData)
+
+                dos.flush()
+
+                try{
+                    //var c : Byte
+                    var c : Int
+                    var raw : String = ""
+                    do{
+                        //c = dis.readByte()
+                        //c = input.read() //아래랑 같음
+                        c = dis.read()
+                        raw += c.toChar()
+                    }while(dis.available()>0)
+                    Log.i("serverlog", raw)
+
+                }catch(er:Exception){
+
+                }
+
+//                if(serverRespose == "SERVER/JOIN AVAILABLE"){
+//                    moveLoginPage()
+//                }
+//                else if(serverRespose == "SERVER/JOIN NOT AVAILABLE"){
+//                    //var log = "server response"
+//                    //Log.i(log, serverRespose)
+//                }
+
+                socket.close()
+            }catch(e:Exception){
+                e.printStackTrace()
+            }
+        }
+    }
+    fun InputStream.readTextAndClose(charset: Charset = Charsets.UTF_8): String {
+        return this.bufferedReader(charset).use { it.readText() }
     }
 }
