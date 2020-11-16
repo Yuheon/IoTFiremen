@@ -3,6 +3,7 @@ package com.example.firemen
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -12,18 +13,29 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_login.view.*
+import kotlinx.android.synthetic.main.activity_login.view.userLoginEmail
+import kotlinx.android.synthetic.main.activity_login.view.userLoginPW
 import kotlinx.android.synthetic.main.activity_register.view.*
 import kotlinx.android.synthetic.main.dialog_layout.view.*
 import kotlinx.android.synthetic.main.recycler_item.view.*
 import kotlinx.android.synthetic.main.remove_dialog.*
 import kotlinx.android.synthetic.main.remove_dialog.view.*
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.net.Socket
 
 
-class MyAdapter(context: Context) : RecyclerView.Adapter<MyViewHolder>() {
+class MyAdapter(context: Context, userID : String) : RecyclerView.Adapter<MyViewHolder>() {
     lateinit var recyclerItemList: MutableList<RecyclerItem>
     var context : Context = context
-    lateinit var parent: ViewGroup
+    var userID = userID
+    private lateinit var parent: ViewGroup
+    var log = "adapter"
+    //shared preference variable
+    //var addrPref : SharedPreferences = context.getSharedPreferences("AddressInfo", Context.MODE_PRIVATE)
+    //var addrPrefEdit : SharedPreferences.Editor = addrPref.edit()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -53,16 +65,31 @@ class MyAdapter(context: Context) : RecyclerView.Adapter<MyViewHolder>() {
                 //builder.setNegativeButton("취소",null)
 
                 rootView.yesRemove.setOnClickListener{
+
+                    //get list from SharedPreference, then remove selected item from SharedPreference
+                    var prefAddrList : MutableList<String>
+                    var listSharedPreferences = JsonSharedPreference(context, "AddressInfo")
+
+                    prefAddrList = listSharedPreferences.getList()
+
+                    Log.i(log, "adpater log : $prefAddrList[adapterPosition]")
+                    Log.i(log, "adpater log : $adapterPosition")
+                    var removeAddr = prefAddrList[adapterPosition]
+                    prefAddrList.removeAt(adapterPosition)
+                    listSharedPreferences.setList(prefAddrList)
+
                     recyclerItemList.removeAt(adapterPosition)
                     notifyItemRemoved(adapterPosition)
+
+                    var thread = NetworkThread(removeAddr)
+                    thread.start()
+
                     alertDialog.dismiss()
                 }
                 rootView.noRemove.setOnClickListener {
                     alertDialog.dismiss()
                 }
-
             }
-
         }
         return MyViewHolder(itemViewHolder, this)
     }
@@ -79,5 +106,28 @@ class MyAdapter(context: Context) : RecyclerView.Adapter<MyViewHolder>() {
 //        holder.apply{
 //            itemView.deleteButton.setOnClickListener{
 //
+    }
+
+    inner class NetworkThread(removeData : String) : Thread(){
+        private val ip = "54.221.152.48"
+        private val port = 4000
+        var removeAddr = removeData
+
+        override fun run() {
+            try{
+                var socket = Socket(ip, port)
+
+                var output = socket.getOutputStream()
+                var dos = DataOutputStream(output)
+
+                //var userData = "APP/LOGIN/${userLoginEmail.text.toString()}/${userLoginPW.text.toString()}"
+                var userData = "APP/$userID/DELETEBUILDINGCODE/$removeAddr"
+                dos.writeUTF(userData)
+                dos.flush()
+
+            }catch(e:Exception){
+                e.printStackTrace()
+            }
+        }
     }
 }

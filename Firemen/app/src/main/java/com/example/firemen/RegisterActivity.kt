@@ -1,5 +1,6 @@
 package com.example.firemen
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -20,6 +21,8 @@ import java.nio.charset.Charset
 class RegisterActivity : AppCompatActivity() {
     private lateinit var auth : FirebaseAuth
     var log = "register"
+    var context : Context = this
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -42,7 +45,7 @@ class RegisterActivity : AppCompatActivity() {
         val userPWCheck = editTextPasswordCheck.text.toString()
         val userName = editTextName.text.toString()
         val userPNumber = editTextPNumber.text.toString()
-        lateinit var database: DatabaseReference
+        //lateinit var database: DatabaseReference
 
         if(userPW != userPWCheck){
             //Show the error message
@@ -70,9 +73,9 @@ class RegisterActivity : AppCompatActivity() {
         if(flag == 1)
             return
         else {
-            Log.i("serverlog2", "333333")
             var thread = NetworkThread()
             thread.start()
+
             //fire base 사용했을 때
 //            auth.createUserWithEmailAndPassword(
 //                editTextEmail.text.toString(),
@@ -110,7 +113,6 @@ class RegisterActivity : AppCompatActivity() {
         startActivity(Intent(this, LoginActivity::class.java))
     }
     inner class NetworkThread : Thread(){
-        //private val ip = "192.168.1.6"
         private val ip = "54.221.152.48"
         private val port = 4000
 
@@ -127,42 +129,38 @@ class RegisterActivity : AppCompatActivity() {
 
                 var userData = "APP/JOIN/${editTextEmail.text.toString()}/${editTextPassword.text.toString()}/${editTextPNumber.text.toString()}/${editTextName.text.toString()}"
 
-
                 dos.writeUTF(userData)
 
                 dos.flush()
 
+                var serverResponse : String = ""
                 try{
                     //var c : Byte
                     var c : Int
-                    var raw : String = ""
                     do{
-                        //c = dis.readByte()
+                        //c = dis.readByte()// c : Byte 일 때
                         //c = input.read() //아래랑 같음
                         c = dis.read()
-                        raw += c.toChar()
+                        serverResponse += c.toChar()
                     }while(dis.available()>0)
-                    Log.i("serverlog", raw)
+                    Log.i(log, "server response : $serverResponse")
 
-                }catch(er:Exception){
+                }catch(e : Exception){
 
                 }
+                if(serverResponse == "SERVER/JOIN AVAILABLE"){
+                    socket.close()//?
+                    moveLoginPage()
+                }
+                else if(serverResponse == "SERVER/JOIN NOT AVAILABLE"){
+                    Toast.makeText(context,"중복된 아이디 입니다.",Toast.LENGTH_LONG).show()
+                    //Toast.makeText(applicationContext,"중복된 아이디 입니다.",Toast.LENGTH_LONG).show()
+                }
 
-//                if(serverRespose == "SERVER/JOIN AVAILABLE"){
-//                    moveLoginPage()
-//                }
-//                else if(serverRespose == "SERVER/JOIN NOT AVAILABLE"){
-//                    //var log = "server response"
-//                    //Log.i(log, serverRespose)
-//                }
 
-                socket.close()
             }catch(e:Exception){
                 e.printStackTrace()
             }
         }
-    }
-    fun InputStream.readTextAndClose(charset: Charset = Charsets.UTF_8): String {
-        return this.bufferedReader(charset).use { it.readText() }
     }
 }
